@@ -9,11 +9,9 @@
 
 #include "bank.hpp"
 #include "common.hpp"
-#include "trail.hpp"
-#include <cryptoutil.hpp>
+#include "decide.hpp"
 
 using namespace eosio;
-using cryptoutil::hash;
 using std::string;
 
 CONTRACT dao : public contract {
@@ -172,8 +170,7 @@ CONTRACT dao : public contract {
       ACTION clrdebugs (const uint64_t& starting_id, const uint64_t& batch_size);
 
       ACTION addperiod (const time_point& start_time, 
-                        const time_point& end_time, 
-                        const string& phase);
+                        const time_point& end_time);
       ACTION remperiods (const uint64_t& begin_period_id, 
                          const uint64_t& end_period_id);
 

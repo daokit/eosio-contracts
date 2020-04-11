@@ -204,12 +204,12 @@ void dao::enroll (	const name& enroller,
 	config_table      config_s (get_self(), get_self().value);
    	Config c = config_s.get_or_create (get_self(), Config());  
 
-	asset one_DAO = asset { 100, common::S_DAO };
+	asset one_vote = asset { 100, common::S_VOTE };
 	string memo { "Welcome to the DAO!"};
 	action(	
 		permission_level{get_self(), "active"_n}, 
 		c.names.at("telos_decide_contract"), "mint"_n, 
-		make_tuple(applicant, one_DAO, memo))
+		make_tuple(applicant, one_vote, memo))
 	.send();
 
 	// Should we also send 1 REWARD?  I think so, so I'll put it for now, but comment it out
@@ -322,7 +322,7 @@ name dao::register_ballot (const name& proposer,
 	c.names["last_ballot_id"] = new_ballot_id;
 	config_s.set(c, get_self());
 	
-	trailservice::trail::ballots_table b_t (c.names.at("telos_decide_contract"), c.names.at("telos_decide_contract").value);
+	decidespace::decide::ballots_table b_t (c.names.at("telos_decide_contract"), c.names.at("telos_decide_contract").value);
 	auto b_itr = b_t.find (new_ballot_id.value);
 	check (b_itr == b_t.end(), "ballot_id: " + new_ballot_id.to_string() + " has already been used.");
 
@@ -337,7 +337,7 @@ name dao::register_ballot (const name& proposer,
 			new_ballot_id, 
 			"poll"_n, 
 			get_self(), 
-			common::S_DAO, 
+			common::S_VOTE, 
 			"1token1vote"_n, 
 			options))
    .send();
@@ -450,8 +450,7 @@ void dao::create (const name&						scope,
 			if (proposal_type == "role"_n) { 
 				// role logic/business rules 
 				check (ints.at("fulltime_capacity_x100") > 0, "fulltime_capacity_x100 must be greater than zero. You submitted: " + std::to_string(ints.at("fulltime_capacity_x100")));
-				check (assets.at("annual_usd_salary").amount > 0, "annual_usd_salary must be greater than zero. You submitted: " + assets.at("annual_usd_salary").to_string());
-
+				
 			} else if (proposal_type == "assignment"_n)  {
 				if (proposal_type == "assignment"_n) {
 					checkx (ints.find("role_id") != ints.end(), "Role ID is required when type is assignment.");
@@ -477,13 +476,18 @@ void dao::create (const name&						scope,
 					float time_share_perc = get_float(ints, "time_share_x100");
 					debug_str = debug_str + "Assignment: time_share_perc: " + std::to_string(time_share_perc) + ". ";
 
-					o.assets ["weekly_reward_salary"]	= adjust_asset (o_itr_role->assets.at("weekly_reward_salary"), time_share_perc);
-					o.assets ["weekly_vote_salary"]		= adjust_asset (o_itr_role->assets.at("weekly_vote_salary"), time_share_perc);
-					o.assets ["weekly_usd_salary"] 		= adjust_asset (o_itr_role->assets.at("weekly_usd_salary"), time_share_perc);
-	
-				} else if (proposal_type == "payout"_n) {
-					o.assets = assets;
-				}
+					if (o_itr_role->assets.find("weekly_reward_salary") != o_itr_role->assets.end()) {
+						o.assets ["weekly_reward_salary"]	= adjust_asset (o_itr_role->assets.at("weekly_reward_salary"), time_share_perc);
+					}
+										
+					if (o_itr_role->assets.find("weekly_vote_salary") != o_itr_role->assets.end()) {
+						o.assets ["weekly_vote_salary"]		= adjust_asset (o_itr_role->assets.at("weekly_vote_salary"), time_share_perc);
+					}
+
+					if (o_itr_role->assets.find("weekly_usd_salary") != o_itr_role->assets.end()) {
+						o.assets ["weekly_usd_salary"] 	= adjust_asset (o_itr_role->assets.at("weekly_usd_salary"), time_share_perc);
+					}	
+				} 
 				debug (debug_str);
 			}
 		}
@@ -535,9 +539,9 @@ void dao::newrole (const uint64_t& proposal_id) {
 	change_scope ("proposal"_n, proposal_id, "proparchive"_n, true);
 }
 
-void dao::addperiod (const time_point& start_date, const time_point& end_date, const string& week) {
+void dao::addperiod (const time_point& start_date, const time_point& end_date) {
 	require_auth (get_self());
-	bank.addperiod (start_date, end_date, week);
+	bank.addperiod (start_date, end_date);
 }
 
 void dao::assign ( const uint64_t& 		proposal_id) {
@@ -598,13 +602,13 @@ void dao::closeprop(const uint64_t& proposal_id) {
 	config_table      config_s (get_self(), get_self().value);
    	Config c = config_s.get_or_create (get_self(), Config());  
 
-	trailservice::trail::ballots_table b_t (c.names.at("telos_decide_contract"), c.names.at("telos_decide_contract").value);
+	decidespace::decide::ballots_table b_t (c.names.at("telos_decide_contract"), c.names.at("telos_decide_contract").value);
 	auto b_itr = b_t.find (prop.names.at("ballot_id").value);
 	check (b_itr != b_t.end(), "ballot_id: " + prop.names.at("ballot_id").to_string() + " not found.");
 
-	trailservice::trail::treasuries_table t_t (c.names.at("telos_decide_contract"), c.names.at("telos_decide_contract").value);
-	auto t_itr = t_t.find (common::S_DAO.code().raw());
-	check (t_itr != t_t.end(), "Treasury: " + common::S_DAO.code().to_string() + " not found.");
+	decidespace::decide::treasuries_table t_t (c.names.at("telos_decide_contract"), c.names.at("telos_decide_contract").value);
+	auto t_itr = t_t.find (common::S_VOTE.code().raw());
+	check (t_itr != t_t.end(), "Treasury: " + common::S_VOTE.code().to_string() + " not found.");
 
 	asset quorum_threshold = adjust_asset(t_itr->supply, 0.20000000);  // quorum of 20%
 	map<name, asset> votes = b_itr->options;

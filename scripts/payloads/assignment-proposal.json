@@ -1,0 +1,59 @@
+{
+    "data": {
+      "scope": "proposal",
+      "names": [
+        {
+          "key": "assigned_account",
+          "value": "buckyjohnson"
+        },
+        {
+          "key":"owner",
+          "value":"buckyjohnson"
+        },
+        {
+          "key":"type",
+          "value":"assignment"
+        },
+        {
+          "key":"trx_action_name",
+          "value": "assign"
+        }
+      ],
+      "strings": [
+        {
+          "key": "title",
+          "value": "Elementary Curriculum - Southwest Region"
+        },
+        {
+          "key": "description",
+          "value": "This assignment covers the southwest region of our fictional geography"
+        },
+        {
+          "key": "url",
+          "value": "null"
+        }
+      ],
+      "assets": [],
+      "time_points": [],
+      "ints": [
+        {
+          "key": "start_period",
+          "value": 2
+        },
+        {
+          "key": "end_period",
+          "value": 25
+        },
+        {
+          "key": "role_id",
+          "value": 1
+        },
+        {
+          "key": "time_share_x100",
+          "value": 50
+        }
+      ],
+      "floats": [],
+      "trxs": []
+    }
+  }

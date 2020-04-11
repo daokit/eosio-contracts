@@ -38,7 +38,6 @@ class Bank {
             uint64_t         period_id               ;
             time_point       start_date              ;
             time_point       end_date                ;
-            string           phase                   ;
 
             uint64_t        primary_key()  const { return period_id; }
         };
@@ -165,13 +164,12 @@ class Bank {
             });
         }
 
-        void addperiod (const time_point& start_date, const time_point& end_date, const string& phase) {
+        void addperiod (const time_point& start_date, const time_point& end_date) {
 
             period_t.emplace (contract, [&](auto &p) {
                 p.period_id     = period_t.available_primary_key();
                 p.start_date    = start_date;
                 p.end_date      = end_date;
-                p.phase         = phase;
             });
         }
 

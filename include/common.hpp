@@ -8,7 +8,7 @@ using std::string;
 namespace common {
 
     static const symbol         S_REWARD                        ("REWARD", 2);
-    static const symbol         S_VOTE                          ("VOTE", 2);
+    static const symbol         S_VOTE                          ("VOTEPOW", 2);
     static const symbol         S_USD                           ("USD", 2);
    
     static const uint64_t       NO_ASSIGNMENT                   = -1;         

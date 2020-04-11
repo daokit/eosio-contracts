@@ -1,0 +1,60 @@
+{
+    "data": {
+      "scope": "proposal",
+      "names": [
+        {
+          "key":"type",
+          "value":"role"
+        },
+        {
+          "key":"owner",
+          "value":"buckyjohnson"
+        },
+        {
+          "key":"trx_action_name",
+          "value":"newrole"
+        }
+      ],
+      "strings": [
+        {
+          "key": "title",
+          "value": "Director of Elementary Curriculum"
+        },
+        {
+          "key": "description",
+          "value": "Configure the curriculum for students in elementary school"
+        }
+      ],
+      "assets": [
+        {
+          "key": "weekly_reward_salary",
+          "value": "1000.00 REWARD"
+        },
+        {
+            "key": "weekly_vote_salary",
+            "value": "552.00 VOTEPOW"
+        }
+      ],
+      "time_points": [],
+      "ints": [
+        {
+          "key": "start_period",
+          "value": 1
+        },
+        {
+          "key": "end_period",
+          "value": 25
+        },
+        {
+          "key": "fulltime_capacity_x100",
+          "value": 100
+        },
+        {
+          "key": "min_time_share_x100",
+          "value": 50
+        }
+      ],
+      "floats": [],
+      "trxs": []
+    }
+  }

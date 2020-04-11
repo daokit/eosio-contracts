@@ -3,29 +3,21 @@
     "names": [
       {
         "key": "reward_token_contract",
-        "value": "token.hypha"
-      },
-      {
-        "key": "seeds_token_contract",
-        "value": "token.seeds"
+        "value": "generictokes"
       },
       {
         "key": "telos_decide_contract",
-        "value": "trailservice"
-      },
-      {
-        "key": "seeds_escrow_contract",
-        "value": "escrow.seeds"
+        "value": "telos.decide"
       }
     ],
     "strings": [
       {
         "key": "client_version",
-        "value": "1.0.13 0c81dde6"
+        "value": "0.000-pre-alpha"
       },
       {
         "key":"contract_version",
-        "value": "1.0.1 366e8dfe"
+        "value": "0.000-pre-alpha"
       }
     ],
     "assets": [],
@@ -33,14 +25,6 @@
     "ints": [
       {
         "key": "voting_duration_sec",
-        "value": 604800
-      },
-      {
-        "key": "seeds_deferral_factor_x100",
-        "value": 130
-      },
-      {
-        "key": "hypha_deferral_factor_x100",
         "value": 60
       },
       {

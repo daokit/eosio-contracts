@@ -1,0 +1,56 @@
+{
+  "data": {
+    "scope": "proposal",
+    "names": [
+      {
+        "key": "owner",
+        "value": "buckyjohnson"
+      },
+      {
+        "key": "proposer",
+        "value": "buckyjohnson"
+      },
+      {
+        "key": "recipient",
+        "value": "buckyjohnson"
+      },
+      {
+        "key": "trx_action_name",
+        "value": "makepayout"
+      },
+      {
+        "key": "type",
+        "value": "payout"
+      }
+    ],
+    "strings": [
+      {
+        "key": "description",
+        "value": "Payout for reimbursement for a Meetup"
+      },
+      {
+        "key": "title",
+        "value": "I led a local meetup to spread the word on the movement"
+      }
+    ],
+    "assets": [
+      {
+        "key": "reward_amount",
+        "value": "1250.00 REWARD"
+      },
+      {
+        "key": "vote_amount",
+        "value": "821.00 VOTEPOW"
+      }
+    ],
+    "time_points": [
+      {
+        "key": "contribution_date",
+        "value": "2020-01-30T13:00:00.000"
+      }
+    ],
+    "ints": [],
+    "floats": [],
+    "trxs": []
+  }
+}
