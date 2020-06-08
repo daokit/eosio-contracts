@@ -21,7 +21,7 @@ CONTRACT dao : public contract {
       struct [[eosio::table, eosio::contract("dao") ]] Config 
       {
          // required configurations:
-         // names : telos_decide_contract, reward_token_contract, seeds_token_contract, last_ballot_id
+         // names : telos_decide_contract, reward_token_contract, vote_token_contract, last_ballot_id
          // ints  : voting_duration_sec
          map<string, name>          names             ;
          map<string, string>        strings           ;
@@ -37,8 +37,9 @@ CONTRACT dao : public contract {
 
       struct [[eosio::table, eosio::contract("dao") ]] Member 
       {
-         name           member                  ;
-         uint64_t       primary_key() const { return member.value; }
+         name              member                  ;
+         vector<uint64_t>  completed_challenges    ;
+         uint64_t          primary_key() const { return member.value; }
       };
 
       typedef multi_index<"members"_n, Member> member_table;
@@ -55,31 +56,7 @@ CONTRACT dao : public contract {
       };
       typedef multi_index<"applicants"_n, Applicant> applicant_table;
 
-      struct [[eosio::table, eosio::contract("dao") ]] AssignmentPayout
-      {
-         uint64_t        ass_payment_id          ;
-         uint64_t        assignment_id           ;
-         name            recipient               ;
-         uint64_t        period_id               ;
-         vector<asset>   payments                ;
-         time_point      payment_date            ;
-
-         uint64_t        primary_key()           const { return ass_payment_id; }
-         uint64_t        by_assignment()         const { return assignment_id; }
-         uint64_t        by_period ()            const { return period_id; }
-         uint64_t        by_recipient()          const { return recipient.value; }
-      };
-
-      typedef multi_index<"asspayouts"_n, AssignmentPayout,
-         indexed_by<"byassignment"_n,
-               const_mem_fun<AssignmentPayout, uint64_t, &AssignmentPayout::by_assignment>>,
-         indexed_by<"byperiod"_n,
-               const_mem_fun<AssignmentPayout, uint64_t, &AssignmentPayout::by_period>>,
-         indexed_by<"byrecipient"_n,
-               const_mem_fun<AssignmentPayout, uint64_t, &AssignmentPayout::by_recipient>>
-      > asspay_table;
-
-      // scope: proposal, proparchive, role, assignment
+      // scope: proposal, member, applicant, challenge
       struct [[eosio::table, eosio::contract("dao") ]] Object
       {
          uint64_t                   id                ;
@@ -146,16 +123,8 @@ CONTRACT dao : public contract {
       ACTION eraseobj (const name& scope,
                         const uint64_t&   id);
       ACTION togglepause ();
-      ACTION addowner (const name& scope);
-      ACTION updtrxs ();
-      ACTION updtype ();
-      ACTION updroleint (const uint64_t& role_id, const string& key, const int64_t& intvalue) ;
-      ACTION recreate (const name& scope, const uint64_t& id);
       ACTION debugmsg (const string& message);
       ACTION updversion (const string& component, const string& version);
-      // ACTION backupobjs (const name& scope);
-      // ACTION erasebackups (const name& scope);
-      // ACTION restoreobjs (const name& scope);
 
       ACTION setconfig (const map<string, name> 		  names,
                         const map<string, string>       strings,
@@ -180,14 +149,12 @@ CONTRACT dao : public contract {
       // To introduce a new proposal type, we would add another action to the below.
       ACTION newrole    (  const uint64_t&   proposal_id);
       ACTION assign     (  const uint64_t& 	proposal_id);
-      ACTION makepayout (  const uint64_t&   proposal_id);
       ACTION exectrx    (  const uint64_t&   proposal_id);
+
+      ACTION compchalleng (const name& completer, const uint64_t& challenge_id) 
       
       // anyone can call closeprop, it executes the transaction if the voting passed
       ACTION closeprop(const uint64_t& proposal_id);
-
-      // users can claim their salary pay
-      ACTION payassign(const uint64_t& assignment_id, const uint64_t& period_id);
             
       // temporary hack (?) - keep a list of the members, although true membership is governed by token holdings
       ACTION removemember(const name& member_to_remove);
@@ -286,30 +253,7 @@ CONTRACT dao : public contract {
          trx.send(get_next_sender_id(), get_self());
 
          check (false, message);
-      }
-
-      void check_capacity (const uint64_t& role_id, const uint64_t& req_time_share_x100) {
-         // Ensure that this proposal would not push the role over it's approved full time capacity
-         object_table o_t_role (get_self(), "role"_n.value);
-         auto o_itr_role = o_t_role.find (role_id);
-         checkx (o_itr_role != o_t_role.end(), "Role ID: " + std::to_string(role_id) + " does not exist.");
-         int role_capacity = o_itr_role->ints.at("fulltime_capacity_x100");
-
-         object_table o_t_assignment (get_self(), "assignment"_n.value);
-         auto sorted_by_role = o_t_assignment.get_index<"byfk"_n>();
-         auto a_itr_by_role = sorted_by_role.find(role_id);
-         int consumed_capacity = 0;
-         debug ("Role capacity: " + std::to_string(role_capacity) + ", fk: " + 
-               std::to_string(a_itr_by_role->ints.at("fk")) + "; Role ID: " + std::to_string(role_id));
-         while (a_itr_by_role != sorted_by_role.end() && a_itr_by_role->ints.at("fk") == role_id) {
-            consumed_capacity += a_itr_by_role->ints.at("time_share_x100");
-            a_itr_by_role++;
-         }
-
-         checkx (consumed_capacity + req_time_share_x100 <= role_capacity, "Role ID: " + 
-            std::to_string (role_id) + " cannot support assignment. Full time capacity (x100) is " + std::to_string(role_capacity) + 
-            " and consumed capacity (x100) is " + std::to_string(consumed_capacity) + "; proposal requests time share (x100) of: " + std::to_string(req_time_share_x100));
-      }
+      }   
 };
 
 #endif

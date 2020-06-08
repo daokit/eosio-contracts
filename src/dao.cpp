@@ -18,14 +18,6 @@ void dao::removemember (const name& member) {
 	m_t.erase (m_itr);
 }
 
-void dao::reset () {
-	// bank.reset_config ();
-	require_auth (get_self());
-	// config_table      config_s (get_self(), get_self().value);
-   	// Config c = config_s.get_or_create (get_self(), Config()); 
-	// config_s.remove ();
-}
-
 void dao::eraseobjs (const name& scope) {
 	require_auth (get_self());
 	object_table o_t (get_self(), scope.value);
@@ -57,83 +49,6 @@ void dao::resetperiods () {
 	require_auth (get_self());
 	bank.reset_periods();
 }
-
-void dao::addowner (const name& scope) {
-	require_auth (get_self());
-	object_table o_t (get_self(), scope.value);
-	auto o_itr = o_t.begin();
-	while (o_itr != o_t.end()) {
-		o_t.modify (o_itr, get_self(), [&](auto &o) {
-			o.names["owner"] = o_itr->names.at("proposer");
-		});
-		o_itr++;
-	}
-}
-
-void dao::updroleint (const uint64_t& role_id, const string& key, const int64_t& intvalue) {
-	object_table o_t (get_self(), "role"_n.value);
-	auto o_itr = o_t.find (role_id);
-	check (o_itr != o_t.end(), "Role ID not found: " + std::to_string(role_id));
-
-	o_t.modify(o_itr, get_self(), [&](auto &o) {
-		o.ints[key] = intvalue;
-	});
-}
-
-// void dao::erasebackups (const name& scope) {
-// 	check ( is_paused(), "Contract must be paused to call this action.");	
-
-// 	backup_object_table o_t_backup (get_self(), scope.value);
-// 	auto o_itr = o_t_backup.begin();
-// 	while (o_itr != o_t_backup.end()) {
-// 		o_itr = o_t_backup.erase (o_itr);
-// 	}
-// }
-
-// void dao::backupobjs (const name& scope) {
-// 	check ( is_paused(), "Contract must be paused to call this action.");	
-
-// 	object_table o_t (get_self(), scope.value);
-// 	backup_object_table o_t_backup (get_self(), scope.value);
-
-// 	auto o_itr = o_t.begin();	
-// 	while (o_itr != o_t.end()) {
-// 		o_t_backup.emplace (get_self(), [&](auto &o) {
-// 			o.id                          = o_itr->id;
-// 			o.names                       = o_itr->names;
-// 			o.assets                      = o_itr->assets;
-// 			o.strings                     = o_itr->strings;
-// 			o.floats                      = o_itr->floats;
-// 			o.time_points                 = o_itr->time_points;
-// 			o.ints                        = o_itr->ints;
-// 			o.trxs                        = o_itr->trxs;
-// 		});
-// 		o_itr = o_t.erase (o_itr);
-// 	}	
-// }
-
-// void dao::restoreobjs (const name& scope) {
-// 	check ( is_paused(), "Contract must be paused to call this action.");	
-
-// 	object_table o_t (get_self(), scope.value);
-// 	backup_object_table o_t_backup (get_self(), scope.value);
-
-// 	auto o_itr_backup = o_t_backup.begin();	
-// 	while (o_itr_backup != o_t_backup.end()) {
-// 		o_t.emplace (get_self(), [&](auto &o) {
-// 			o.id                          = o_itr_backup->id;
-// 			o.names                       = o_itr_backup->names;
-// 			o.assets                      = o_itr_backup->assets;
-// 			o.strings                     = o_itr_backup->strings;
-// 			o.floats                      = o_itr_backup->floats;
-// 			o.time_points                 = o_itr_backup->time_points;
-// 			o.ints                        = o_itr_backup->ints;
-// 			o.trxs                        = o_itr_backup->trxs;
-// 		});
-// 		o_itr_backup++;
-// 	}	
-// }
-
 
 void dao::setconfig (	const map<string, name> 		names,
 						const map<string, string>       strings,
@@ -238,48 +153,6 @@ void dao::debugmsg (const string& message) {
 	debug (message);
 }
 
-void dao::updtrxs () {
-	require_auth (get_self());
-
-	object_table o_t (get_self(), "proposal"_n.value);
-	auto o_itr = o_t.begin ();
-	while (o_itr != o_t.end()) {
-		transaction trx (time_point_sec(current_time_point())+ (60 * 60 * 24 * 35));
-		trx.actions.emplace_back(
-			permission_level{get_self(), "active"_n}, 
-			o_itr->names.at("trx_action_contract"), o_itr->names.at("trx_action_name"), 
-			std::make_tuple(o_itr->id));
-		trx.delay_sec = 0;
-
-		o_t.modify (o_itr, get_self(), [&](auto &o) {
-			o.trxs["exec_on_approval"]      = trx; 
-		});		
-		o_itr++;
-	}	
-}
-
-void dao::updtype () {
-	require_auth (get_self());
-
-	object_table o_t (get_self(), "proposal"_n.value);
-	auto o_itr = o_t.begin ();
-	while (o_itr != o_t.end()) {
-		o_t.modify (o_itr, get_self(), [&](auto &o) {
-			o.names["type"]      = "payout"_n; // o_itr->names.at("proposal_type"); 
-		});		
-		o_itr++;
-	}	
-
-	o_t = object_table(get_self(), "proparchive"_n.value);
-	o_itr = o_t.begin ();
-	while (o_itr != o_t.end()) {
-		o_t.modify (o_itr, get_self(), [&](auto &o) {
-			o.names["type"]      = "payout"_n; // o_itr->names.at("proposal_type"); 
-		});		
-		o_itr++;
-	}	
-}
-
 void dao::apply (const name& applicant, 
 						const string& content) {
 
@@ -370,28 +243,6 @@ name dao::register_ballot (const name& proposer,
 	return new_ballot_id;
 }
 
-void dao::recreate (const name& scope, const uint64_t& id) {
-	require_auth (get_self());
-	object_table o_t (get_self(), scope.value);
-	auto o_itr = o_t.find (id);
-	check (o_itr != o_t.end(), "Proposal not found. Scope: " + scope.to_string() + "; ID: " + std::to_string(id));
-
-	action (
-      permission_level{get_self(), "active"_n},	  
-      get_self(), "create"_n,
-      std::make_tuple(scope, o_itr->names,
-	  						 o_itr->strings,
-							 o_itr->assets,
-							 o_itr->time_points,
-							 o_itr->ints,
-							 o_itr->floats,
-							 o_itr->trxs))
-   .send();
-
-	// erase original object
-   	eraseobj (scope, id);
-}
-
 void dao::create (const name&						scope,
 					const map<string, name> 		names,
 					const map<string, string>       strings,
@@ -407,8 +258,6 @@ void dao::create (const name&						scope,
 	check (has_auth (owner) || has_auth(get_self()), "Authentication failed. Must have authority from owner: " +
 		owner.to_string() + "@active or " + get_self().to_string() + "@active.");
 	
-	string debug_str = "";
-
 	qualify_proposer (owner);
 
 	object_table o_t (get_self(), scope.value);
@@ -436,60 +285,19 @@ void dao::create (const name&						scope,
 				o.names["trx_action_contract"] = get_self();
 			}
 
+			name action_on_approval = name ("passprop");  // default action is 'passprop'
 			if (names.find("trx_action_name") != names.end()) {
-				// this transaction executes if the proposal passes
-				transaction trx (time_point_sec(current_time_point())+ (60 * 60 * 24 * 35));
-				trx.actions.emplace_back(
-					permission_level{get_self(), "active"_n}, 
-					o.names.at("trx_action_contract"), o.names.at("trx_action_name"), 
-					std::make_tuple(o.id));
-				trx.delay_sec = 0;
-				o.trxs["exec_on_approval"]      = trx;      
-			}	
-
-			if (proposal_type == "role"_n) { 
-				// role logic/business rules 
-				check (ints.at("fulltime_capacity_x100") > 0, "fulltime_capacity_x100 must be greater than zero. You submitted: " + std::to_string(ints.at("fulltime_capacity_x100")));
-				
-			} else if (proposal_type == "assignment"_n)  {
-				if (proposal_type == "assignment"_n) {
-					checkx (ints.find("role_id") != ints.end(), "Role ID is required when type is assignment.");
-					checkx (ints.find("time_share_x100") != ints.end(), "time_share_x100 is a required field for assignment proposals.");
-					checkx (ints.at("time_share_x100") > 0 && ints.at("time_share_x100") <= 10000, "time_share_x100 must be greater than zero and less than or equal to 100.");
-					checkx (ints.find("start_period") != ints.end(), "start_period is a required field for assignment proposals.");
-					checkx (ints.find("end_period") != ints.end(), "end_period is a required field for assignment proposals.");
-					o.ints["fk"]	= ints.at("role_id");
-
-					object_table o_t_role (get_self(), "role"_n.value);
-					auto o_itr_role = o_t_role.find (ints.at("role_id"));
-					checkx (o_itr_role != o_t_role.end(), "Role ID: " + std::to_string(ints.at("role_id")) + " does not exist.");
-
-					// role has enough remaining capacity
-					check_capacity (ints.at("role_id"), ints.at("time_share_x100"));
-				
-					// assignment proposal time_share is greater that or equal role minimum
-					check (ints.at("time_share_x100") >= o_itr_role->ints.at("min_time_share_x100"), "Role ID: " + 
-						std::to_string (ints.at("role_id")) + " has a minimum commitment % (x100) of " + std::to_string(o_itr_role->ints.at("min_time_share_x100")) +
-						"; proposal requests commitment % (x100) of: " + std::to_string(ints.at("time_share_x100")));
-		
-					// assignment ratio
-					float time_share_perc = get_float(ints, "time_share_x100");
-					debug_str = debug_str + "Assignment: time_share_perc: " + std::to_string(time_share_perc) + ". ";
-
-					if (o_itr_role->assets.find("weekly_reward_salary") != o_itr_role->assets.end()) {
-						o.assets ["weekly_reward_salary"]	= adjust_asset (o_itr_role->assets.at("weekly_reward_salary"), time_share_perc);
-					}
-										
-					if (o_itr_role->assets.find("weekly_vote_salary") != o_itr_role->assets.end()) {
-						o.assets ["weekly_vote_salary"]		= adjust_asset (o_itr_role->assets.at("weekly_vote_salary"), time_share_perc);
-					}
-
-					if (o_itr_role->assets.find("weekly_usd_salary") != o_itr_role->assets.end()) {
-						o.assets ["weekly_usd_salary"] 	= adjust_asset (o_itr_role->assets.at("weekly_usd_salary"), time_share_perc);
-					}	
-				} 
-				debug (debug_str);
+				action_on_approval = names.at("trx_action_name");
 			}
+
+			// this transaction executes if the proposal passes
+			transaction trx (time_point_sec(current_time_point())+ (60 * 60 * 24 * 35));
+			trx.actions.emplace_back(
+				permission_level{get_self(), "active"_n}, 
+				o.names.at("trx_action_contract"), action_on_approval, 
+				std::make_tuple(o.id));
+			trx.delay_sec = 0;
+			o.trxs["exec_on_approval"]      = trx;      
 		}
 	});      
 }
@@ -511,83 +319,36 @@ void dao::clrdebugs (const uint64_t& starting_id, const uint64_t& batch_size) {
 	out.send(get_next_sender_id(), get_self());    
 }
 
-void dao::exectrx (const uint64_t& proposal_id) {
-	require_auth (get_self());
-
-	// proposal_table p_t (get_self(), get_self().value);
-	// auto p_itr = p_t.find (proposal_id);
-	// check (p_itr != p_t.end(), "Proposal ID: " + std::to_string(proposal_id) + " does not exist.");
-	// check (p_itr->trxs.size() > 1, "There are not transactions to execute. Trx map size: " + std::to_string(p_itr->trxs.size()) + "; Proposal ID: " + std::to_string(proposal_id));
-
-	// for (auto trx_itr = p_itr->trxs.begin(); trx_itr != p_itr->trxs.end(); ++trx_itr) {
-	// 	// skip the transaction named "exec_on_approval" because that is the one currently executing 
-	// 	// debug ( "trx_itr->first	: " + trx_itr->first);
-	// 	// debug ( "true/false		: " + std::to_string(trx_itr->first.compare("exec_on_approval") == 0));
-	// 	if (trx_itr->first.compare("exec_on_approval") == 0) {
-	// 		debug ("Executing transaction	: " + trx_itr->first);
-	// 		trx_itr->second.send(current_block_time().to_time_point().sec_since_epoch(), get_self());
-	// 	}
-	// }
-}
-
-// void dao::approved (const name& scope, const uint64_t& id) {}
-
-void dao::newrole (const uint64_t& proposal_id) {
-
-   	require_auth (get_self());
-	change_scope ("proposal"_n, proposal_id, "role"_n, false);
-	change_scope ("proposal"_n, proposal_id, "proparchive"_n, true);
-}
-
 void dao::addperiod (const time_point& start_date, const time_point& end_date) {
 	require_auth (get_self());
 	bank.addperiod (start_date, end_date);
 }
 
-void dao::assign ( const uint64_t& 		proposal_id) {
+void dao::compchalleng (const name& completer, const uint64_t& challenge_id) 
+{
+	check(!is_paused(), "Contract is paused for maintenance. Please try again later.");
+	require_auth(completer);
 
-   	require_auth (get_self());
+	object_table o_t_challenge(get_self(), "challenge"_n.value);
+	auto c_itr = o_t_challenge.find(challenge_id);
+	check(c_itr != o_t_challenge.end(), "Challenge does not exist: " + std::to_string(challenge_id));
 
-	object_table o_t_proposal (get_self(), "proposal"_n.value);
-	auto o_itr = o_t_proposal.find(proposal_id);
-	check (o_itr != o_t_proposal.end(), "Scope: " + "proposal"_n.to_string() + "; Object ID: " + std::to_string(proposal_id) + " does not exist.");
-
-	// Ensure that the owner of this proposer doesn't already have this assignment
-	object_table o_t_assignment (get_self(), "assignment"_n.value);
-	auto sorted_by_owner = o_t_assignment.get_index<"byowner"_n>();
-	auto a_itr = sorted_by_owner.find(o_itr->names.at("owner").value);
-
-	while (a_itr != sorted_by_owner.end() && a_itr->names.at("owner") == o_itr->names.at("owner")) {
-		check (! (a_itr->ints.at("role_id") == o_itr->ints.at("role_id") && a_itr->names.at("owner") == o_itr->names.at("owner")), 
-			"Proposal owner already has this role. Owner: " + o_itr->names.at("owner").to_string() + "; Role ID: " + std::to_string(o_itr->ints.at("role_id")));    
-		a_itr++;
+	// check in the completer's list of objects to determine if they have completed this challenge already
+	// TODO: what if a challenge is erased and a second one is created with the same ID
+	member_table m_t (get_self(), get_self().value);
+	auto m_itr = m_t.find (completer.value);
+	check (m_itr != m_t.end(), "Challenge completer is not a member: " + completer.to_string());
+	for (chg_id : m_itr->completed_challenges) {
+		check (challenge_id != chg_id, "Member: ", completer.to_string(), " has already completed challenge id: " + std::to_string(challenge_id));)
 	}
+	m_t.modify (m_itr, get_self(), [&](auto &m) {
+		m.completed_challenges.push_back(challenge_id);
+	});
 
-	check_capacity (o_itr->ints.at("role_id"), o_itr->ints.at("time_share_x100"));
-	change_scope ("proposal"_n, proposal_id, "assignment"_n, false);
-}
-
-void dao::makepayout (const uint64_t&        proposal_id) {
-
-	require_auth (get_self());
-
-	object_table o_t (get_self(), "proposal"_n.value);
-	auto o_itr = o_t.find(proposal_id);
-	check (o_itr != o_t.end(), "Scope: " + "proposal"_n.to_string() + "; Object ID: " + std::to_string(proposal_id) + " does not exist.");
-
-	string memo { "One time payout for DAO Contribution. Proposal ID: " + std::to_string(proposal_id) };
-	bank.makepayment (-1, o_itr->names.at("recipient"), o_itr->assets.at("reward_amount"), memo, common::NO_ASSIGNMENT, 1);
-	bank.makepayment (-1, o_itr->names.at("recipient"), o_itr->assets.at("usd_amount"), memo, common::NO_ASSIGNMENT, 1);
-	bank.makepayment (-1, o_itr->names.at("recipient"), o_itr->assets.at("vote_amount"), memo, common::NO_ASSIGNMENT, 1);
-}
-
-void dao::eraseobj (	const name& scope, 
-						  	const uint64_t& id) {
-	require_auth (get_self());
-	object_table o_t (get_self(), scope.value);
-	auto o_itr = o_t.find(id);
-	check (o_itr != o_t.end(), "Scope: " + scope.to_string() + "; Object ID: " + std::to_string(id) + " does not exist.");
-	o_t.erase (o_itr);
+	string memo{"One time reward for Hypha Challenge. Challenge Name ID: " + std::to_string(challenge_id)};
+	bank.makepayment(-1, completer, o_itr->assets.at("reward_amount"), memo, challenge_id, 1);
+	bank.makepayment(-1, completer, o_itr->assets.at("usd_amount"), memo, challenge_id, 1);
+	bank.makepayment(-1, completer, o_itr->assets.at("vote_amount"), memo, challenge_id, 1);
 }
 
 void dao::closeprop(const uint64_t& proposal_id) {
@@ -642,85 +403,20 @@ void dao::closeprop(const uint64_t& proposal_id) {
 	debug (debug_str);
 }
 
+void dao::passprop (const uint64_t& proposal_id) {
+	require_auth (get_self());
+
+	object_table o_t(get_self(), "proposal"_n.value);
+	auto o_itr = o_t.find(proposal_id);
+	check (o_itr != o_t.end(), "Proposal ID does not exist: " + std::to_string(proposal_id));
+	check (o_itr->names.find("type") != o_itr->names.end(), "Proposal object does not have a type to promote object to. proposal_id: " + std::to_string(proposal_id));
+
+	vector<name> new_scopes = {o_itr->names.at("type"), name("proparchive")};
+	change_scope("proposal"_n, proposal_id, new_scopes, true);
+}
+
+
 void dao::qualify_proposer (const name& proposer) {
 	// Should we require that users hold Hypha before they are allowed to propose?  Disabled for now.
 	// check (bank.holds_hypha (proposer), "Proposer: " + proposer.to_string() + " does not hold REWARD.");
-}
-
-void dao::payassign (const uint64_t& assignment_id, const uint64_t& period_id) {
-
-	check ( !is_paused(), "Contract is paused for maintenance. Please try again later.");	
-
-	object_table o_t_assignment (get_self(), "assignment"_n.value);
-	auto a_itr = o_t_assignment.find (assignment_id);
-	check (a_itr != o_t_assignment.end(), "Cannot pay assignment. Assignment ID does not exist: " + std::to_string(assignment_id));
-
-	require_auth (a_itr->names.at("assigned_account"));
-
-	object_table o_t_role (get_self(), "role"_n.value);
-	auto r_itr = o_t_role.find (a_itr->ints.at("role_id"));
-	check (r_itr != o_t_role.end(), "Cannot pay assignment. Role ID does not exist: " + std::to_string(a_itr->ints.at("role_id")));
-
-	// Check that the assignment has not been paid for this period yet
-	asspay_table asspay_t (get_self(), get_self().value);
-	auto period_index = asspay_t.get_index<"byperiod"_n>();
-	auto per_itr = period_index.find (period_id);
-	while (per_itr->period_id == period_id && per_itr != period_index.end()) {
-		check (per_itr->assignment_id != assignment_id, "Assignment ID has already been paid for this period. Period ID: " +
-			std::to_string(period_id) + "; Assignment ID: " + std::to_string(assignment_id));
-		per_itr++;
-	}
-
-	// Check that the period has elapsed
-	auto p_itr = bank.period_t.find (period_id);
-	check (p_itr != bank.period_t.end(), "Cannot make payment. Period ID not found: " + std::to_string(period_id));
-	check (p_itr->end_date.sec_since_epoch() < current_block_time().to_time_point().sec_since_epoch(), 
-		"Cannot make payment. Period ID " + std::to_string(period_id) + " has not closed yet.");
-
-	// debug ( "Assignment created date : " + a_itr->created_date.to_string() + "; Seconds    : " + std::to_string(a_itr->created_date.sec_since_epoch()));
-	// debug ( "Period end              : " + p_itr->end_date.to_string() + ";  Seconds: " + std::to_string(p_itr->end_date.sec_since_epoch()));
-
-	// debug ( "Assignment created date Seconds    : " + std::to_string(a_itr->created_date.sec_since_epoch()));
-	// debug ( "Period end Seconds : " + std::to_string(p_itr->end_date.sec_since_epoch()));
-
-	// check that the creation date of the assignment is before the end of the period
-	check (a_itr->time_points.at("created_date").sec_since_epoch() < p_itr->end_date.sec_since_epoch(), 
-		"Cannot make payment to assignment. Assignment was not approved before this period.");
-
-	// check that pay period is between (inclusive) the start and end period of the role and the assignment
-	check (a_itr->ints.at("start_period") <= period_id && a_itr->ints.at("end_period") >= period_id, "For assignment, period ID must be between " +
-		std::to_string(a_itr->ints.at("start_period")) + " and " + std::to_string(a_itr->ints.at("end_period")) + " (inclusive). You tried: " + std::to_string(period_id));
-
-	check (r_itr->ints.at("start_period") <= period_id && r_itr->ints.at("end_period") >= period_id, "For role, period ID must be between " +
-		std::to_string(r_itr->ints.at("start_period")) + " and " + std::to_string(r_itr->ints.at("end_period")) + " (inclusive). You tried: " + std::to_string(period_id));
-
-	float first_week_ratio_calc = 1;  // pro-rate based on elapsed % of the first week
-
-	// pro-rate the payout if the assignment was created 
-	if (a_itr->time_points.at("created_date").sec_since_epoch() > p_itr->start_date.sec_since_epoch()) {
-		first_week_ratio_calc = (float) ( (float) p_itr->end_date.sec_since_epoch() - a_itr->time_points.at("created_date").sec_since_epoch()) / 
-							( (float) p_itr->end_date.sec_since_epoch() - p_itr->start_date.sec_since_epoch());
-	}
-
-	asset reward_payment = adjust_asset(a_itr->assets.at("weekly_reward_salary"), first_week_ratio_calc);
-	asset usd_payment = adjust_asset(a_itr->assets.at("weekly_usd_salary"), first_week_ratio_calc);
-	asset vote_payment = adjust_asset(r_itr->assets.at("weekly_vote_salary"), first_week_ratio_calc);
-
-	asspay_t.emplace (get_self(), [&](auto &a) {
-		a.ass_payment_id        = asspay_t.available_primary_key();
-		a.assignment_id         = assignment_id;
-		a.recipient             = a_itr->names.at("assigned_account"),
-		a.period_id             = period_id;
-		a.payment_date          = current_block_time().to_time_point();
-		a.payments.push_back (reward_payment);
-		a.payments.push_back (vote_payment);
-		a.payments.push_back (usd_payment);
-	});
-
-	string memo = "Payment for role " + std::to_string(a_itr->ints.at("role_id")) + "; Assignment ID: " 
-		+ std::to_string(assignment_id) + "; Period ID: " + std::to_string(period_id);
-
-	bank.makepayment (period_id, a_itr->names.at("assigned_account"), reward_payment, memo, assignment_id, 1);
-	bank.makepayment (period_id, a_itr->names.at("assigned_account"), vote_payment, memo, assignment_id, 1);
-	bank.makepayment (period_id, a_itr->names.at("assigned_account"), usd_payment, memo, assignment_id, 1);
 }
